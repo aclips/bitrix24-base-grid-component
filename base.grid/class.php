@@ -10,7 +10,7 @@ class BaseGridComponent extends \CBitrixComponent
 
     const PAGE_SIZE = 15;
 
-    protected $grid_grid_options;
+    protected $grid_options;
     protected $grid_id;
     protected $grid_filter = [];
     protected $grid_rows = [];
