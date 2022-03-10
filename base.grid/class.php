@@ -22,7 +22,7 @@ class BaseGridComponent extends \CBitrixComponent
 
         $this->grid_filter = $this->getFilterFields();
 
-        $entityObject = $this->getElementsEntity();
+        $entityRepository = $this->getEntityRepository();
 
         $filter = $this->getEntityFilter($this->grid_id, $this->grid_filter);
 
@@ -33,7 +33,7 @@ class BaseGridComponent extends \CBitrixComponent
         $page_size = $this->arParams['PAGE_SIZE'] ?? self::PAGE_SIZE;
         $nav = $this->initNav($this->grid_options, $page_size);
 
-        $elements = $entityObject::getList([
+        $elements = $entityRepository::getList([
             'filter' => $filter,
             'select' => $select,
             "order" => $sort,
@@ -70,11 +70,11 @@ class BaseGridComponent extends \CBitrixComponent
         $this->includeComponentTemplate();
     }
 
-    public function getElementsEntity()
+    public function getEntityRepository()
     {
-        $entityObject = new \Bitrix\Main\UserTable();
+        $entityReporitory = new \Bitrix\Main\UserTable();
 
-        return $entityObject;
+        return $entityReporitory;
     }
 
     public function initNav($grid_options, $page_size)
