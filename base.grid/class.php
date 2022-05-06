@@ -108,7 +108,7 @@ class BaseGridComponent extends \CBitrixComponent
 
     public function getEntityFilter($grid_id, $grid_filter)
     {
-        return $this->prepairFilter($grid_id, $grid_filter);
+        return $this->prepareFilter($grid_id, $grid_filter);
     }
 
     public function getEntitySelect()
@@ -165,7 +165,7 @@ class BaseGridComponent extends \CBitrixComponent
         return $columns;
     }
 
-    private function prepairFilter($grid_id, $grid_filter): array
+    private function prepareFilter($grid_id, $grid_filter): array
     {
         $filter = [];
 
