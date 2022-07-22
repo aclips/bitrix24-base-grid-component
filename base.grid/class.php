@@ -1,5 +1,6 @@
 <?php
-namespace Base\Components;
+
+namespace Aclips\Components;
 
 use Bitrix\Main\Grid;
 use Bitrix\Main\UI;
@@ -10,28 +11,23 @@ class BaseGridComponent extends \CBitrixComponent
 
     const PAGE_SIZE = 15;
 
-    protected $grid_options;
-    protected $grid_id;
-    protected $grid_filter = [];
-    protected $grid_rows = [];
-
     public function executeComponent()
     {
-        $this->grid_id = self::GRID_ID;
-        $this->grid_options = new Grid\Options($this->grid_id);
+        $grid_id = self::GRID_ID;
+        $grid_options = new Grid\Options($grid_id);
 
-        $this->grid_filter = $this->getFilterFields();
+        $grid_filter = $this->getFilterFields();
 
         $entityRepository = $this->getEntityRepository();
 
-        $filter = $this->getEntityFilter($this->grid_id, $this->grid_filter);
+        $filter = $this->getEntityFilter($grid_id, $grid_filter);
 
         $select = $this->getEntitySelect();
 
-        $sort = $this->getSorting($this->grid_options);
+        $sort = $this->getSorting($grid_options);
 
         $page_size = $this->arParams['PAGE_SIZE'] ?? self::PAGE_SIZE;
-        $nav = $this->initNav($this->grid_options, $page_size);
+        $nav = $this->initNav($grid_options, $page_size);
 
         $elements = $entityRepository::getList([
             'filter' => $filter,
@@ -43,6 +39,8 @@ class BaseGridComponent extends \CBitrixComponent
         ]);
 
         $nav->setRecordCount($elements->getCount());
+
+        $grid_rows = [];
 
         foreach ($elements as $element) {
             $prepared_element = $this->getPreparedElement($element);
@@ -57,15 +55,15 @@ class BaseGridComponent extends \CBitrixComponent
                 'actions' => $actions
             ];
 
-            $this->grid_rows[] = $row;
+            $grid_rows[] = $row;
         }
 
         $this->arResult['NAV'] = $nav;
 
-        $this->arResult['GRID_ID'] = $this->grid_id;
-        $this->arResult['GRID_FILTER'] = $this->grid_filter;
+        $this->arResult['GRID_ID'] = $grid_id;
+        $this->arResult['GRID_FILTER'] = $grid_filter;
         $this->arResult['GRID_COLUMNS'] = $this->getGridColumns();
-        $this->arResult['ROWS'] = $this->grid_rows;
+        $this->arResult['ROWS'] = $grid_rows;
 
         $this->includeComponentTemplate();
     }
@@ -79,14 +77,13 @@ class BaseGridComponent extends \CBitrixComponent
 
     public function initNav($grid_options, $page_size)
     {
-        $navParams = $grid_options->GetNavParams();
         $grid_id = $grid_options->getid();
 
         $nav = new UI\PageNavigation($grid_id);
 
         $nav->allowAllRecords(true)
-          ->setPageSize($page_size)
-          ->initFromUri();
+            ->setPageSize($page_size)
+            ->initFromUri();
 
         return $nav;
     }
@@ -94,14 +91,14 @@ class BaseGridComponent extends \CBitrixComponent
     public function getSorting($grid)
     {
         $sort = $grid->GetSorting([
-          'sort' => [
-              'ID' => 'DESC'
-          ],
-          'vars' => [
-              'by' => 'by',
-              'order' => 'order'
-          ]
-      ]);
+            'sort' => [
+                'ID' => 'DESC'
+            ],
+            'vars' => [
+                'by' => 'by',
+                'order' => 'order'
+            ]
+        ]);
 
         return $sort['sort'];
     }
@@ -126,7 +123,7 @@ class BaseGridComponent extends \CBitrixComponent
         return [];
     }
 
-    private function getFilterFields($option = []): array
+    private function getFilterFields(): array
     {
         $filterFields = [
             [
@@ -145,7 +142,7 @@ class BaseGridComponent extends \CBitrixComponent
         return $filterFields;
     }
 
-    private function getGridColumns($option = []): array
+    private function getGridColumns(): array
     {
         $columns = [
             [
@@ -178,7 +175,7 @@ class BaseGridComponent extends \CBitrixComponent
 
         $filterPrepared = \Bitrix\Main\UI\Filter\Type::getLogicFilter($filter, $grid_filter);
 
-        if (! empty($filter['FIND'])) {
+        if (!empty($filter['FIND'])) {
             $findFilter = [
                 'LOGIC' => 'OR',
                 [
@@ -186,7 +183,7 @@ class BaseGridComponent extends \CBitrixComponent
                 ]
             ];
 
-            if (! empty($filterPrepared)) {
+            if (!empty($filterPrepared)) {
                 $filterPrepared[] = $findFilter;
             } else {
                 $filterPrepared = $findFilter;
