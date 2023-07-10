@@ -34,24 +34,33 @@ $addButton = new \Bitrix\UI\Buttons\AddButton([
 \Bitrix\UI\Toolbar\Facade\Toolbar::addButton($addButton);
 ?>
 
-<?php $APPLICATION->IncludeComponent('bitrix:main.ui.grid', '', [
+<?php
+$nav = $arResult['NAV'];
+$APPLICATION->IncludeComponent('bitrix:main.ui.grid', '', [
     'GRID_ID' => $arResult['GRID_ID'],
     'COLUMNS' => $arResult['GRID_COLUMNS'],
     'ROWS' => $arResult['ROWS'],
-    'NAV_OBJECT' => $arResult['NAV'],
+    'NAV_OBJECT' => $nav,
+    'DEFAULT_PAGE_SIZE' => $nav->getPageSize(),
+    'PAGE_SIZES' => $nav->getPageSizes(),
+    'TOTAL_ROWS_COUNT' => $nav->getRecordCount(),
+    'NAV_PARAM_NAME' => $nav->getId(),
+    'CURRENT_PAGE' => $nav->getCurrentPage(),
+    'PAGE_COUNT' => $nav->getPageCount(),
+    'ACTION_PANEL' => $arResult['ACTION_PANEL'],
     'AJAX_MODE' => 'Y',
     'AJAX_ID' => \CAjax::getComponentID('bitrix:main.ui.grid', '.default', ''),
     'AJAX_OPTION_JUMP' => 'N',
-    'SHOW_ROW_CHECKBOXES' => false,
-    'SHOW_CHECK_ALL_CHECKBOXES' => false,
+    'SHOW_ROW_CHECKBOXES' => true,
+    'SHOW_CHECK_ALL_CHECKBOXES' => true,
     'SHOW_ROW_ACTIONS_MENU' => true,
     'SHOW_GRID_SETTINGS_MENU' => true,
     'SHOW_NAVIGATION_PANEL' => true,
     'SHOW_PAGINATION' => true,
     'SHOW_SELECTED_COUNTER' => false,
     'SHOW_TOTAL_COUNTER' => false,
-    'SHOW_PAGESIZE' => false,
-    'SHOW_ACTION_PANEL' => false,
+    'SHOW_PAGESIZE' => true,
+    'SHOW_ACTION_PANEL' => true,
     'ALLOW_COLUMNS_SORT' => true,
     'ALLOW_COLUMNS_RESIZE' => true,
     'ALLOW_HORIZONTAL_SCROLL' => true,
@@ -60,3 +69,13 @@ $addButton = new \Bitrix\UI\Buttons\AddButton([
     'AJAX_OPTION_HISTORY' => 'N',
     "ENABLE_COLLAPSIBLE_ROWS" => true
 ], $component); ?>
+
+<script>
+    BX.ready(function () {
+        let componentParams = {
+            gridId: '<?= $arResult["GRID_ID"] ?>',
+            signedParameters: '<?= $this->getComponent()->getSignedParameters() ?>',
+        }
+        BX.Aclips.Base.List.init(componentParams)
+    })
+</script>
