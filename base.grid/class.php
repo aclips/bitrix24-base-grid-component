@@ -3,13 +3,12 @@
 namespace Aclips\Components;
 
 use Bitrix\Main\Grid;
+use Bitrix\Main\Grid\Panel\Types;
 use Bitrix\Main\UI;
 
 class BaseGridComponent extends \CBitrixComponent
 {
     const GRID_ID = 'BASE_GRID';
-
-    const PAGE_SIZE = 15;
 
     public function executeComponent()
     {
@@ -26,8 +25,9 @@ class BaseGridComponent extends \CBitrixComponent
 
         $sort = $this->getSorting($grid_options);
 
-        $page_size = $this->arParams['PAGE_SIZE'] ?? self::PAGE_SIZE;
-        $nav = $this->initNav($grid_options, $page_size);
+        $nav = $this->initNav($grid_options);
+
+        $action_panel = $this->getActionPanel();
 
         $elements = $entityRepository::getList([
             'filter' => $filter,
@@ -64,6 +64,7 @@ class BaseGridComponent extends \CBitrixComponent
         $this->arResult['GRID_FILTER'] = $grid_filter;
         $this->arResult['GRID_COLUMNS'] = $this->getGridColumns();
         $this->arResult['ROWS'] = $grid_rows;
+        $this->arResult["ACTION_PANEL"] = $action_panel;
 
         $this->includeComponentTemplate();
     }
@@ -75,14 +76,22 @@ class BaseGridComponent extends \CBitrixComponent
         return $entityReporitory;
     }
 
-    public function initNav($grid_options, $page_size)
+    public function initNav($grid_options)
     {
+        $navParams = $grid_options->GetNavParams();
+
         $grid_id = $grid_options->getid();
 
         $nav = new UI\PageNavigation($grid_id);
 
+        $pageSizes = [];
+        foreach (["5", "10", "20", "30", "50", "100"] as $index) {
+            $pageSizes[] = ['NAME' => $index, 'VALUE' => $index];
+        }
+
         $nav->allowAllRecords(true)
-            ->setPageSize($page_size)
+            ->setPageSize($navParams['nPageSize'])
+            ->setPageSizes($pageSizes)
             ->initFromUri();
 
         return $nav;
@@ -120,7 +129,15 @@ class BaseGridComponent extends \CBitrixComponent
 
     public function getElementActions($fields)
     {
-        return [];
+        $actions = [];
+
+        $actions[] = [
+            'text' => 'Base Action',
+            'onclick' => "BX.Aclips.Base.List.baseAction('${fields['NAME']}')",
+            'default' => true
+        ];
+
+        return $actions;
     }
 
     private function getFilterFields(): array
@@ -129,6 +146,7 @@ class BaseGridComponent extends \CBitrixComponent
             [
                 'id' => 'NAME',
                 'name' => 'Имя',
+                'type' => 'string',
                 'default' => true
             ],
             [
@@ -136,7 +154,42 @@ class BaseGridComponent extends \CBitrixComponent
                 'name' => 'Дата регистрации',
                 'type' => 'date',
                 'default' => true
-            ]
+            ],
+            [
+                'id' => 'USER',
+                'name' => "Пользователь",
+                'type' => 'dest_selector',
+                'default' => true,
+            ],
+            [
+                'id' => 'UF_DEPARTMENT',
+                'name' => 'Подразделение',
+                'type' => 'entity_selector',
+                'params' => [
+                    'multiple' => 'Y',
+                    'dialogOptions' => [
+                        'height' => 240,
+                        'context' => 'filter',
+                        'entities' => [
+                            [
+                                'id' => 'department',
+                                'options' => [
+                                    "selectMode" => "departmentsOnly",
+                                    "allowFlatDepartments" => true,
+                                ],
+                            ],
+                        ]
+                    ],
+                ],
+                'default' => true,
+            ],
+            [
+                'id' => 'ACTIVE',
+                'name' => 'Активность',
+                'type' => 'list',
+                'items' => ["" => "Не указана", "Y" => "Да", "N" => "Нет"],
+                'default' => true
+            ],
         ];
 
         return $filterFields;
@@ -160,6 +213,33 @@ class BaseGridComponent extends \CBitrixComponent
         ];
 
         return $columns;
+    }
+
+    protected function getActionPanel(): array
+    {
+        $panel = [
+            'GROUPS' => [
+                [
+                    'ITEMS' => [
+                        [
+                            'TYPE' => Types::BUTTON,
+                            'ID' => "group_action_button",
+                            'CLASS' => "apply",
+                            'TEXT' => "Base Group Action",
+                            'ONCHANGE' => [[
+                                'ACTION' => 'CALLBACK',
+                                'DATA' => [
+                                    ['JS' => 'BX.Aclips.Base.List.baseGroupAction()'],
+                                ],
+                            ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        return $panel;
     }
 
     private function prepareFilter($grid_id, $grid_filter): array
@@ -188,6 +268,11 @@ class BaseGridComponent extends \CBitrixComponent
             } else {
                 $filterPrepared = $findFilter;
             }
+        }
+
+        if (!empty($filterPrepared['USER'])) {
+            $filterPrepared["ID"] = str_replace("U", "", $filterData['USER']);
+            unset($filterPrepared["USER"]);
         }
 
         return $filterPrepared;
